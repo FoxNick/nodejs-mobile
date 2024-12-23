@@ -70,7 +70,7 @@ MIN_ARGS = 3  # Script, outdir, tempdir
 def _Call(cmd_list, silent=False):
   cmd = " ".join(cmd_list)
   if not silent: print("# %s" % cmd)
-  return subprocess.call(cmd, shell=True)
+  return subprocess.call(cmd, shell=False)
 
 class Runner(object):
   def __init__(self, name, outdir, tempdir):

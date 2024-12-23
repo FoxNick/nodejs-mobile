@@ -251,7 +251,7 @@ class WinTool:
     tool)."""
         env = self._GetEnv(arch)
         popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            args, shell=False, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         for line in out.splitlines():
@@ -295,7 +295,7 @@ class WinTool:
         )
         env = self._GetEnv(arch)
         popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            args, shell=False, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         # Filter junk out of stdout, and write filtered versions. Output we want
@@ -314,7 +314,7 @@ class WinTool:
         """Filter logo banner from invocations of asm.exe."""
         env = self._GetEnv(arch)
         popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            args, shell=False, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         for line in out.splitlines():
@@ -332,7 +332,7 @@ class WinTool:
     don't support the /nologo flag."""
         env = self._GetEnv(arch)
         popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            args, shell=False, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         for line in out.splitlines():
@@ -355,7 +355,7 @@ class WinTool:
                 env[k] = v
         args = open(rspfile).read()
         dir = dir[0] if dir else None
-        return subprocess.call(args, shell=True, env=env, cwd=dir)
+        return subprocess.call(args, shell=False, env=env, cwd=dir)
 
     def ExecClCompile(self, project_dir, selected_files):
         """Executed by msvs-ninja projects when the 'ClCompile' target is used to
@@ -367,7 +367,7 @@ class WinTool:
         ]
         cmd = ["ninja.exe"]
         cmd.extend(ninja_targets)
-        return subprocess.call(cmd, shell=True, cwd=BASE_DIR)
+        return subprocess.call(cmd, shell=False, cwd=BASE_DIR)
 
 
 if __name__ == "__main__":

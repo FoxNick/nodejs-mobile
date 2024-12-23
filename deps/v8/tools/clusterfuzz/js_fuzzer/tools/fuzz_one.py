@@ -36,7 +36,7 @@ os.makedirs(path)
 
 start = time.time()
 subprocess.check_call(
-    FUZZ % (path, os.path.join(path, 'out.log')), shell=True)
+    FUZZ % (path, os.path.join(path, 'out.log')), shell=False)
 duration = int(time.time() - start)
 
 with open(os.path.join(path, 'duration.log'), 'w') as f:

@@ -145,7 +145,7 @@ class BenchmarkRunner(object):
         continue
       print("run #%d" % i)
       cmdline = "%s > %s" % (self.opts.command, outfile)
-      subprocess.call(cmdline, shell=True)
+      subprocess.call(cmdline, shell=False)
       time.sleep(self.opts.sleep)
 
   def ProcessLine(self, line):

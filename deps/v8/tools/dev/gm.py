@@ -206,17 +206,17 @@ def PrintCompletionsAndExit():
 
 def _Call(cmd, silent=False):
   if not silent: print("# %s" % cmd)
-  return subprocess.call(cmd, shell=True)
+  return subprocess.call(cmd, shell=False)
 
 def _CallWithOutputNoTerminal(cmd):
-  return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+  return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=False)
 
 def _CallWithOutput(cmd):
   print("# %s" % cmd)
   # The following trickery is required so that the 'cmd' thinks it's running
   # in a real terminal, while this script gets to intercept its output.
   parent, child = pty.openpty()
-  p = subprocess.Popen(cmd, shell=True, stdin=child, stdout=child, stderr=child)
+  p = subprocess.Popen(cmd, shell=False, stdin=child, stdout=child, stderr=child)
   os.close(child)
   output = []
   try:

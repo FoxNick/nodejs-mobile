@@ -33,7 +33,7 @@ def PrintHelpAndExit():
 
 def _Call(cmd, silent=False):
   if not silent: print("# %s" % cmd)
-  return subprocess.call(cmd, shell=True)
+  return subprocess.call(cmd, shell=False)
 
 
 def ParseArguments(argv):

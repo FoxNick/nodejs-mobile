@@ -690,7 +690,7 @@ class LibraryRepo(object):
     if filename.endswith(".ko"): return False
     process = subprocess.Popen(
       "%s -h %s" % (OBJDUMP_BIN, filename),
-      shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+      shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     pipe = process.stdout
     try:
       for line in pipe:
@@ -727,7 +727,7 @@ class LibraryRepo(object):
       dynamic_symbols = ""
     process = subprocess.Popen(
       "%s -h -t %s -C %s" % (OBJDUMP_BIN, dynamic_symbols, mmap_info.filename),
-      shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+      shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     pipe = process.stdout
     after_section = None
     code_sections = set()

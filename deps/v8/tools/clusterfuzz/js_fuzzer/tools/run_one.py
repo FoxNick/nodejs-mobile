@@ -55,7 +55,7 @@ def run(fuzz_file, flag_file):
   args = [FOOZZIE, '--random-seed=%d' % random_seed()] + flags + [fuzz_file]
   cmd = ' '.join(args)
   try:
-    output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
+    output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=False)
     return (cmd, output)
   except Exception as e:
     return (cmd, e.output)

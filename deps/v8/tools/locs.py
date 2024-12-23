@@ -139,7 +139,7 @@ def GenerateCompileCommandsAndBuild(build_dir, out):
     exit(1)
 
   autoninja = "autoninja -C {}".format(build_dir)
-  if subprocess.call(autoninja, shell=True, stdout=out) != 0:
+  if subprocess.call(autoninja, shell=False, stdout=out) != 0:
     print("Error: Building {} failed.".format(build_dir), file=sys.stderr)
     exit(1)
 
@@ -148,7 +148,7 @@ def GenerateCompileCommandsAndBuild(build_dir, out):
       compile_commands_file), file=out)
   ninja = "ninja -C {} -t compdb cxx cc > {}".format(
       build_dir, compile_commands_file)
-  if subprocess.call(ninja, shell=True, stdout=out) != 0:
+  if subprocess.call(ninja, shell=False, stdout=out) != 0:
     print("Error: Cound not generate {} for {}.".format(
         compile_commands_file, build_dir), file=sys.stderr)
     exit(1)
@@ -158,7 +158,7 @@ def GenerateCompileCommandsAndBuild(build_dir, out):
       ninja_deps_file), file=out)
   ninja = "ninja -C {} -t deps > {}".format(
       build_dir, ninja_deps_file)
-  if subprocess.call(ninja, shell=True, stdout=out) != 0:
+  if subprocess.call(ninja, shell=False, stdout=out) != 0:
     print("Error: Cound not generate {} for {}.".format(
         ninja_deps_file, build_dir), file=sys.stderr)
     exit(1)
@@ -411,7 +411,7 @@ def Main():
     if ARGS['echocmd']:
       print(runcmd)
     process = subprocess.Popen(
-        runcmd, shell=True, cwd=key['directory'], stdout=subprocess.PIPE)
+        runcmd, shell=False, cwd=key['directory'], stdout=subprocess.PIPE)
     p = {'process': process, 'infile': infilename, 'outfile': outfilename}
     output, _ = p['process'].communicate()
     expanded, expanded_bytes, loc, in_bytes = list(map(int, output.split()))

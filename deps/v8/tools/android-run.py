@@ -54,8 +54,7 @@ def Execute(cmdline):
   (fd_err, errname) = tempfile.mkstemp()
   process = subprocess.Popen(
     args=cmdline,
-    shell=True,
-    stdout=fd_out,
+    shell=False, stdout=fd_out,
     stderr=fd_err,
   )
   exit_code = process.wait()

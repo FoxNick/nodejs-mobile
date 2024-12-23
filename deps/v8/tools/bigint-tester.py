@@ -111,7 +111,7 @@ class TestGenerator(object):
         f.write(self.EmitData(count))
         f.write(self.EmitTestBody())
       return subprocess.call("%s %s" % (binary, path),
-                             shell=True)
+                             shell=False)
     finally:
       os.close(fd)
       os.remove(path)

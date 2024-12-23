@@ -113,7 +113,7 @@ def main():
   if options.verbose:
     cmd.append('-vv')
     print('Running %s' % ' '.join(cmd))
-  subprocess.check_call(' '.join(cmd), shell=True, cwd=V8_BASE)
+  subprocess.check_call(' '.join(cmd), shell=False, cwd=V8_BASE)
 
 if __name__ == '__main__':  # pragma: no cover
   sys.exit(main())

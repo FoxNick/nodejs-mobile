@@ -178,8 +178,7 @@ def get_instrumented_lines(executable):
       stderr=subprocess.PIPE,
       stdin=subprocess.PIPE,
       cwd=BASE_DIR,
-      shell=True,
-  )
+      shell=False)
   output, _ = process.communicate()
   assert process.returncode == 0
   return process_symbolizer_output(output, os.path.dirname(executable))
@@ -265,8 +264,7 @@ def get_covered_lines(args):
       stderr=subprocess.PIPE,
       stdin=subprocess.PIPE,
       cwd=BASE_DIR,
-      shell=True,
-  )
+      shell=False)
   output, _ = process.communicate()
   assert process.returncode == 0
   return (
