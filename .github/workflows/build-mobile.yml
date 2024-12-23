@@ -1,4 +1,7 @@
 name: Build
+concurrency:
+  group: build_${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   workflow_dispatch:
