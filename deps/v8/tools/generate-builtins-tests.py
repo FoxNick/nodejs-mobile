@@ -115,7 +115,7 @@ def ClearGeneratedFiles(options):
 def GenerateTests(options):
   ClearGeneratedFiles(options)  # Re-generate everything.
   output = subprocess.check_output(
-      "%s %s" % (options.d8, options.script), shell=True).strip()
+      "%s %s" % (options.d8, options.script), shell=False).strip()
   objects = json.loads(output)
 
   os.makedirs(options.outdir)

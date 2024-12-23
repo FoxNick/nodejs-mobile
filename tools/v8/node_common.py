@@ -30,7 +30,7 @@ def EnsureDepotTools(v8_path, fetch_if_not_exist):
       # shell=True needed on Windows to resolve git.bat.
       subprocess.check_call("git clone {} {}".format(
           pipes.quote(DEPOT_TOOLS_URL),
-          pipes.quote(depot_tools)), shell=True)
+          pipes.quote(depot_tools)), shell=False)
       # Using check_output to hide warning messages.
       subprocess.check_output(
           [sys.executable, gclient_path, "metrics", "--opt-out"],

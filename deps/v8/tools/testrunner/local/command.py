@@ -195,10 +195,7 @@ class PosixCommand(BaseCommand):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env=self._get_env(),
-        shell=True,
-        # Make the new shell create its own process group. This allows to kill
-        # all spawned processes reliably (https://crbug.com/v8/8292).
-        preexec_fn=os.setsid,
+        shell=False, preexec_fn=os.setsid,
       )
     except Exception as e:
       sys.stderr.write('Error executing: %s\n' % self)

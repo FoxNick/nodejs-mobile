@@ -103,7 +103,7 @@ def process(filename, lint, should_format):
   original_input = content
 
   if sys.platform.startswith('win'):
-    p = Popen(['clang-format', '-assume-filename=.ts'], stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
+    p = Popen(['clang-format', '-assume-filename=.ts'], stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=False)
   else:
     p = Popen(['clang-format', '-assume-filename=.ts'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
   output, err = p.communicate(encode(preprocess(content)))

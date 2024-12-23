@@ -77,8 +77,7 @@ def GetDisasmLines(filename, offset, size, arch, inplace, arch_flags=""):
       offset + size,
       filename)
   process = subprocess.Popen(command,
-                             shell=True,
-                             stdout=subprocess.PIPE,
+                             shell=False, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
   out, err = process.communicate()
   lines = out.decode('utf-8').split("\n")

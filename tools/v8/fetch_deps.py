@@ -49,7 +49,7 @@ def EnsureGit(v8_path):
   def git(args):
     # shell=True needed on Windows to resolve git.bat.
     return subprocess.check_output(
-        "git " + args, cwd=v8_path, shell=True).strip()
+        "git " + args, cwd=v8_path, shell=False).strip()
 
   expected_git_dir = os.path.join(v8_path, ".git")
   actual_git_dir = git("rev-parse --absolute-git-dir")

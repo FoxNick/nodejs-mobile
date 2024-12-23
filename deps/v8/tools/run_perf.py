@@ -705,7 +705,7 @@ class DesktopPlatform(Platform):
       os_prefix = {'linux': 'linux', 'macos': 'mac'}.get(utils.GuessOS())
       if os_prefix:
         tick_tools = os.path.join(TOOLS_BASE, '%s-tick-processor' % os_prefix)
-        subprocess.check_call(tick_tools + ' --only-summary', shell=True)
+        subprocess.check_call(tick_tools + ' --only-summary', shell=False)
       else:  # pragma: no cover
         logging.warning(
             'Profiler option currently supported on Linux and Mac OS.')
