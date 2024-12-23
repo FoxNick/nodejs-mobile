@@ -29,7 +29,7 @@ BUILD_ARCH() {
 
   # Compile
   eval '"./android-configure" "$ANDROID_NDK_PATH" $ANDROID_SDK_VERSION $TARGET_ARCH'
-  make -j $(getconf _NPROCESSORS_ONLN)
+  make -j $(getconf _NPROCESSORS_ONLN -DENABLE_I18N=1)
 
   # Move binaries
   TARGET_ARCH_FOLDER="$TARGET_ARCH"
