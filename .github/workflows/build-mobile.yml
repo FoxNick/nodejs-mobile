@@ -52,7 +52,7 @@ jobs:
         env:
           MY_ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
-          ./tools/android_build.sh $MY_ANDROID_NDK_HOME $ANDROID_TARGET_SDK_VERSION $TARGET_ARCH
+          ./tools/android_build.sh $MY_ANDROID_NDK_HOME $ANDROID_TARGET_SDK_VERSION $TARGET_ARCH $-DENABLE_I18N=1
           rm -rf ./out_android/libnode
 
       - uses: actions/upload-artifact@v4
@@ -141,7 +141,7 @@ jobs:
 
       - run: rm -rf out_android/libnode
 
-      - name: Generate config.gypi
+      - name: Generate config.gypi  
         run: ./configure
 
       - name: Combine
