@@ -142,7 +142,7 @@ jobs:
       - run: rm -rf out_android/libnode
 
       - name: Generate config.gypi
-        run: ./configure
+        run: ./configure --with-intl=small-icu
 
       - name: Combine
         run: |
