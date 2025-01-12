@@ -7,8 +7,8 @@ import socket
 import struct
 import subprocess
 import time
-import xml.etree.ElementTree
 import sys
+import defusedxml.ElementTree
 
 # Python2 has both int and long, Python3 only has int, which is the same as
 # Python2 long.
@@ -201,7 +201,7 @@ def GetLoadedModules(connection):
   modules = {}
   reply = connection.RspRequest('qXfer:libraries:read')
   AssertEquals(reply[0], 'l')
-  library_list = xml.etree.ElementTree.fromstring(reply[1:])
+  library_list = defusedxml.ElementTree.fromstring(reply[1:])
   AssertEquals(library_list.tag, 'library-list')
   for library in library_list:
     AssertEquals(library.tag, 'library')

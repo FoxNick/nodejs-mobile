@@ -15,9 +15,8 @@
 
 import os
 import sys
-
-from xml.dom.minidom import parse
 from xml.dom.minidom import Node
+import defusedxml.minidom
 
 __author__ = "nsylvain (Nicolas Sylvain)"
 ARGUMENTS = None
@@ -220,7 +219,7 @@ def GetConfiguationNodes(vcproj):
 
 
 def GetChildrenVsprops(filename):
-    dom = parse(filename)
+    dom = defusedxml.minidom.parse(filename)
     if dom.documentElement.attributes:
         vsprops = dom.documentElement.getAttribute("InheritedPropertySheets")
         return FixFilenames(vsprops.split(";"), os.path.dirname(filename))
@@ -303,7 +302,7 @@ def main(argv):
         REPLACEMENTS[key] = value
 
     # Open the vcproj and parse the xml.
-    dom = parse(argv[1])
+    dom = defusedxml.minidom.parse(argv[1])
 
     # First thing we need to do is find the Configuration Node and merge them
     # with the vsprops they include.
@@ -323,7 +322,7 @@ def main(argv):
 
         # Now that we have all the vsprops, we need to merge them.
         for current_vsprops in vsprops_list:
-            MergeProperties(configuration_node, parse(current_vsprops).documentElement)
+            MergeProperties(configuration_node, defusedxml.minidom.parse(current_vsprops).documentElement)
 
     # Now that everything is merged, we need to cleanup the xml.
     CleanupVcproj(dom.documentElement)
