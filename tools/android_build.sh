@@ -41,9 +41,9 @@ BUILD_ARCH() {
     TARGET_ARCH_FOLDER="arm64-v8a"
   fi
   mkdir -p "out_android/$TARGET_ARCH_FOLDER/"
-  OUTPUT1="out/Release/"
+  OUTPUT1="out/Release"
   OUTPUT2="out/Release/obj.target/libnode.so"
-  if [ -f "$OUTPUT1" ]; then
+  if [ -d "$OUTPUT1" ]; then
     cp -rp "$OUTPUT1" "out_android/$TARGET_ARCH_FOLDER"
   elif [ -f "$OUTPUT2" ]; then
     cp "$OUTPUT2" "out_android/$TARGET_ARCH_FOLDER/libnode.so"
