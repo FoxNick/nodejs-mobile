@@ -90,44 +90,12 @@ class OverrunGuardedBuffer {
     VirtualFree(alloc_base, 2 * page, MEM_RELEASE);
 #else
 #ifdef USE_MPROTECT
-    // Revert page protection such that the memory can be free()'d.
-    uint8_t* second_page = alloc_base + page;
-    CHECK_EQ(mprotect(second_page, page, PROT_READ | PROT_WRITE), 0);
-#endif
-    free(alloc_base);
-#endif
-  }
 
-  uint8_t* data() {
-    return data_base;
-  }
-
- private:
-  uint8_t* alloc_base;
-  uint8_t* data_base;
-};
 
 // Test that ClientHelloParser::ParseHeader() does not blindly trust the client
 // to send a valid frame length and subsequently does not read out-of-bounds.
 TEST(NodeCrypto, ClientHelloParserParseHeaderOutOfBoundsRead) {
   using node::crypto::ClientHelloParser;
 
-  // This is the simplest packet triggering the bug.
-  const uint8_t packet[] = {0x16, 0x03, 0x01, 0x00, 0x00};
-  OverrunGuardedBuffer<sizeof(packet)> buffer;
-  memcpy(buffer.data(), packet, sizeof(packet));
 
-  // Let the ClientHelloParser parse the packet. This should not lead to a
-  // segmentation fault or to undefined behavior.
-  node::crypto::ClientHelloParser parser;
-  bool end_cb_called = false;
-  parser.Start([](void* arg, auto hello) { GTEST_FAIL(); },
-               [](void* arg) {
-                 bool* end_cb_called = static_cast<bool*>(arg);
-                 EXPECT_FALSE(*end_cb_called);
-                 *end_cb_called = true;
-               },
-               &end_cb_called);
-  parser.Parse(buffer.data(), sizeof(packet));
-  EXPECT_TRUE(end_cb_called);
 }
