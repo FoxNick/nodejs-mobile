@@ -10,7 +10,6 @@ def patch_android():
         os.system('patch -f ./deps/v8/src/trap-handler/trap-handler.h < ./android-patches/trap-handler.h.patch')
         os.system('patch -f ./deps/v8/src/codegen/arm/constants-arm.h < ./android-patches/constants-arm.h.patch')
         os.system('patch -f ./deps/v8/src/heap/base/asm/x64/push_registers_asm.cc < ./android-patches/push_registers_asm.cc.patch')
-        os.system('patch -f ./test/cctest/test_crypto_clienthello.cc < ./android-patches/test_crypto_clienthello.cc.patch')
 
     print("\033[92mInfo: \033[0m" + "Tried to patch.")
 
