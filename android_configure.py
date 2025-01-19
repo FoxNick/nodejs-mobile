@@ -70,7 +70,7 @@ os.environ['CC_host'] = os.popen('command -v gcc').read().strip()
 os.environ['CXX_host'] = os.popen('command -v g++').read().strip()
 
 GYP_DEFINES = "target_arch=" + arch
-GYP_DEFINES += " v8_target_arch=" + arch
+GYP_DEFINES += " v8_target_arch=" + DEST_CPU
 GYP_DEFINES += " android_target_arch=" + arch
 GYP_DEFINES += " host_os=" + host_os + " OS=android"
 GYP_DEFINES += " android_ndk_path=" + android_ndk_path
@@ -79,4 +79,4 @@ os.environ['GYP_DEFINES'] = GYP_DEFINES
 
 if os.path.exists("./configure"):
     # nodejs-mobile patch: added --with-intl=none and --shared
-    os.system("./configure --dest-cpu=" + DEST_CPU + " --dest-os=android --openssl-no-asm --cross-compiling --enable-static")
+    os.system("./configure --dest-cpu=" + DEST_CPU + " --dest-os=android --openssl-no-asm --cross-compiling --fully-static")
