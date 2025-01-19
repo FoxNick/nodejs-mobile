@@ -1301,7 +1301,8 @@ def configure_node(o):
   if target_arch == 'arm64':
     # nodejs-mobile patch: from https://github.com/nodejs/node/pull/45756
     # o['cflags']+=['-msign-return-address=all']
-    o['variables']['arm_fpu'] = options.arm_fpu or 'neon'
+    # o['variables']['arm_fpu'] = options.arm_fpu or 'neon'
+    pass
 
   if options.node_snapshot_main is not None:
     if options.shared:
