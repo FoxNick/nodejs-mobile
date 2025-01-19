@@ -70,7 +70,7 @@ os.environ['CC_host'] = os.popen('command -v gcc').read().strip()
 os.environ['CXX_host'] = os.popen('command -v g++').read().strip()
 
 GYP_DEFINES = "target_arch=" + arch
-GYP_DEFINES += " v8_target_arch=" + arch
+GYP_DEFINES += " v8_target_arch=" + DEST_CPU
 GYP_DEFINES += " android_target_arch=" + arch
 GYP_DEFINES += " host_os=" + host_os + " OS=android"
 GYP_DEFINES += " ANDROID_NDK_ROOT=" + android_ndk_path
