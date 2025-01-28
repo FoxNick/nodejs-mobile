@@ -112,7 +112,7 @@ def ClangTidyRunFull(build_folder, skip_output_filter, checks, auto_fix):
   empty_lines = 0
 
   while True:
-    line = ct_process.stdout.readline()
+    line = ct_process.stdout.readline(5_000_000)
     if line == '':
       break
 
@@ -150,7 +150,7 @@ def ClangTidyRunAggregate(build_folder, print_files):
       stderr=DEVNULL)
   warnings = dict()
   while True:
-    line = ct_process.stdout.readline()
+    line = ct_process.stdout.readline(5_000_000)
     if line == '':
       break
 
@@ -198,7 +198,7 @@ def ClangTidyRunDiff(build_folder, diff_branch, auto_fix):
       stderr=DEVNULL)
   git_ps.wait()
   while True:
-    line = ct_ps.stdout.readline()
+    line = ct_ps.stdout.readline(5_000_000)
     if line == '':
       break
 

@@ -3416,7 +3416,7 @@ class InspectionWebServer(http_server.HTTPServer):
   def output_dump_desc_field(self, f, name):
     try:
       descfile = open(os.path.join(self.dumppath, name + ".desc"), "r")
-      desc = descfile.readline()
+      desc = descfile.readline(5_000_000)
       descfile.close()
     except IOError:
       desc = ""

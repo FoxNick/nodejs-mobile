@@ -28,7 +28,7 @@ def parse(file, seqlen):
     bc_cnt[i] = {}
   last = [None] * seqlen
   with open(file) as f:
-    l = f.readline()
+    l = f.readline(5_000_000)
     while l:
       l = l.strip()
       if l.startswith("Start bytecode interpreter"):
@@ -44,7 +44,7 @@ def parse(file, seqlen):
           key = ' --> '.join(last[i])
           bc_cnt[i][key] = bc_cnt[i].get(key,0) + 1
 
-      l = f.readline()
+      l = f.readline(5_000_000)
   return bc_cnt, total
 
 def print_most_common(d, seqlen, total):
