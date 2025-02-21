@@ -4,7 +4,7 @@
 
 import json
 import os
-import random
+import secrets
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +29,7 @@ class Config(object):
       random_seed: Random-seed used for d8 throughout one fuzz session.
     """
     self.name = name
-    self.rng = rng or random.Random()
+    self.rng = rng or secrets.SystemRandom().Random()
 
   def choose_foozzie_flags(self, foozzie_experiments=None, additional_flags=None):
     """Randomly chooses a configuration from FOOZZIE_EXPERIMENTS.

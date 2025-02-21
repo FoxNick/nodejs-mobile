@@ -10,10 +10,10 @@ import argparse
 import math
 import multiprocessing
 import os
-import random
 import subprocess
 import sys
 import tempfile
+import secrets
 
 # Configuration.
 kChars = "0123456789abcdef"
@@ -49,12 +49,12 @@ if (error_count !== 0) {
 def GenRandom(length, negative=kRandom):
   if length == 0: return "0n"
   s = []
-  if negative == kYes or (negative == kRandom and (random.randint(0, 1) == 0)):
+  if negative == kYes or (negative == kRandom and (secrets.SystemRandom().randint(0, 1) == 0)):
     s.append("-")  # 50% chance of negative.
   s.append("0x")
-  s.append(kChars[random.randint(1, kBase - 1)])  # No leading zero.
+  s.append(kChars[secrets.SystemRandom().randint(1, kBase - 1)])  # No leading zero.
   for i in range(1, length):
-    s.append(kChars[random.randint(0, kBase - 1)])
+    s.append(kChars[secrets.SystemRandom().randint(0, kBase - 1)])
   s.append("n")
   return "".join(s)
 
@@ -123,7 +123,7 @@ class UnaryOp(TestGenerator):
 
   # Subclasses may override this:
   def GenerateInput(self):
-    return GenRandom(random.randint(0, kLineLength))
+    return GenRandom(secrets.SystemRandom().randint(0, kLineLength))
 
   # Subclasses should not override anything below.
   def EmitOne(self):
@@ -150,7 +150,7 @@ class BinaryOp(TestGenerator):
 
   # Subclasses may override these:
   def GenerateInputLengths(self):
-    return random.randint(0, kLineLength), random.randint(0, kLineLength)
+    return secrets.SystemRandom().randint(0, kLineLength), secrets.SystemRandom().randint(0, kLineLength)
 
   def GenerateInputs(self):
     left_length, right_length = self.GenerateInputLengths()
@@ -206,7 +206,7 @@ class Mul(BinaryOp):
   def GetOpString(self): return "*"
   def GenerateResult(self, a, b): return a * b
   def GenerateInputLengths(self):
-    left_length = random.randint(1, kLineLength)
+    left_length = secrets.SystemRandom().randint(1, kLineLength)
     return left_length, kLineLength - left_length
 
 class Div(BinaryOp):
@@ -220,7 +220,7 @@ class Div(BinaryOp):
     # because that case is more interesting.
     min_left = kLineLength * 6 / 10
     max_right = kLineLength * 7 / 10
-    return random.randint(min_left, kLineLength), random.randint(1, max_right)
+    return secrets.SystemRandom().randint(min_left, kLineLength), secrets.SystemRandom().randint(1, max_right)
 
 class Mod(Div):  # Sharing GenerateInputLengths.
   def GetOpString(self): return "%"
@@ -235,14 +235,14 @@ class Mod(Div):  # Sharing GenerateInputLengths.
 class Shl(BinaryOp):
   def GetOpString(self): return "<<"
   def GenerateInputsInternal(self, small_shift_positive):
-    left_length = random.randint(0, kLineLength - 1)
+    left_length = secrets.SystemRandom().randint(0, kLineLength - 1)
     left = GenRandom(left_length)
-    small_shift = random.randint(0, 1) == 0
+    small_shift = secrets.SystemRandom().randint(0, 1) == 0
     if small_shift:
       right_length = 1 + int(math.log((kLineLength - left_length), kBase))
       neg = kNo if small_shift_positive else kYes
     else:
-      right_length = random.randint(0, 3)
+      right_length = secrets.SystemRandom().randint(0, 3)
       neg = kYes if small_shift_positive else kNo
     right = GenRandom(right_length, negative=neg)
     return left, right

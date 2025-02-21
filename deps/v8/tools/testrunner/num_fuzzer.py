@@ -4,7 +4,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import random
 import sys
 
 # Adds testrunner to the path hence it has to be imported at the beggining.
@@ -21,6 +20,7 @@ from testrunner.testproc.filter import StatusFileFilterProc, NameFilterProc
 from testrunner.testproc.loader import LoadProc
 from testrunner.testproc.progress import ResultsTracker
 from testrunner.utils import random_utils
+import secrets
 
 
 DEFAULT_SUITES = ["mjsunit", "webkit", "benchmarks"]
@@ -148,7 +148,7 @@ class NumFuzzer(base_runner.BaseTestRunner):
 
   def _do_execute(self, tests, args, options):
     loader = LoadProc(tests)
-    fuzzer_rng = random.Random(options.fuzzer_random_seed)
+    fuzzer_rng = secrets.SystemRandom().Random(options.fuzzer_random_seed)
 
     combiner = self._create_combiner(fuzzer_rng, options)
     results = self._create_result_tracker(options)

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Built-in template filters used with the ``|`` operator."""
 import math
-import random
 import re
 import warnings
 from collections import namedtuple
@@ -23,6 +22,7 @@ from .utils import htmlsafe_json_dumps
 from .utils import pformat
 from .utils import unicode_urlencode
 from .utils import urlize
+import secrets
 
 _word_re = re.compile(r"\w+", re.UNICODE)
 _word_beginning_split_re = re.compile(r"([-\s\(\{\[\<]+)", re.UNICODE)
@@ -534,7 +534,7 @@ def do_last(environment, seq):
 def do_random(context, seq):
     """Return a random item from the sequence."""
     try:
-        return random.choice(seq)
+        return secrets.choice(seq)
     except IndexError:
         return context.environment.undefined("No random item, sequence was empty.")
 
