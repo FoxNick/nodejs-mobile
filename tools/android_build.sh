@@ -28,6 +28,9 @@ BUILD_ARCH() {
   rm -rf android-toolchain/
 
   # Compile
+  # 强制静态链接所有依赖（包括libc、libstdc++）
+  export LDFLAGS="-static-libstdc++ -static-libgcc"
+  export CFLAGS="-static"
   eval '"./android-configure" "$ANDROID_NDK_PATH" $ANDROID_SDK_VERSION $TARGET_ARCH'
   make -j $(getconf _NPROCESSORS_ONLN)
 
