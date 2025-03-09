@@ -16,6 +16,7 @@ import sys
 from gyp.common import OrderedSet
 import gyp.MSVSUtil
 import gyp.MSVSVersion
+from security import safe_command
 
 windows_quoter_regex = re.compile(r'(\\*)"')
 
@@ -137,7 +138,7 @@ def _FindDirectXInstallation():
     if not dxsdk_dir:
         # Setup params to pass to and attempt to launch reg.exe.
         cmd = ["reg.exe", "query", r"HKLM\Software\Microsoft\DirectX", "/s"]
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = safe_command.run(subprocess.Popen, cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout = p.communicate()[0].decode("utf-8")
         for line in stdout.splitlines():
             if "InstallPath" in line:
@@ -1202,8 +1203,7 @@ def GenerateEnvironmentFiles(
         # Extract environment variables for subprocesses.
         args = vs.SetupScript(arch)
         args.extend(("&&", "set"))
-        popen = subprocess.Popen(
-            args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        popen = safe_command.run(subprocess.Popen, args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         variables = popen.communicate()[0].decode("utf-8")
         if popen.returncode != 0:
@@ -1227,7 +1227,7 @@ def GenerateEnvironmentFiles(
         args.extend(
             ("&&", "for", "%i", "in", "(cl.exe)", "do", "@echo", "LOC:%~$PATH:i")
         )
-        popen = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+        popen = safe_command.run(subprocess.Popen, args, shell=True, stdout=subprocess.PIPE)
         output = popen.communicate()[0].decode("utf-8")
         cl_paths[arch] = _ExtractCLPath(output)
     return cl_paths

@@ -32,6 +32,7 @@ import re
 import signal
 import subprocess
 import sys
+from security import safe_command
 
 PARSER = argparse.ArgumentParser(
     description="A script that averages numbers from another script's output",
@@ -231,7 +232,7 @@ SCORE_REGEX = (r'\A((console.timeEnd: )?'
                r'\ ?(?P<unit>[^\d\W]\w*)?[.\s]*\Z')
 
 for x in range(0, ARGS['repetitions']):
-  proc = subprocess.Popen(ARGS['command'], stdout=subprocess.PIPE)
+  proc = safe_command.run(subprocess.Popen, ARGS['command'], stdout=subprocess.PIPE)
   for line in proc.stdout:
     if ARGS['echo']:
       print(line.decode(), end="")

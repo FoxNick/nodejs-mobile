@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from security import safe_command
 
 TOOLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPARE_SCRIPT = os.path.join(TOOLS_DIR, 'compare_torque_output.py')
@@ -23,7 +24,7 @@ class PredictableTest(unittest.TestCase):
   def _compare_from(self, test_folder):
     file1 = os.path.join(TEST_DATA, test_folder, 'f1')
     file2 = os.path.join(TEST_DATA, test_folder, 'f2')
-    proc = subprocess.Popen([
+    proc = safe_command.run(subprocess.Popen, [
           sys.executable, '-u',
           COMPARE_SCRIPT, file1, file2, self.tmp_file
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

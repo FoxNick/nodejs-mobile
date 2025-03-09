@@ -13,6 +13,7 @@ import collections
 import os
 import subprocess
 import sys
+from security import safe_command
 
 
 __DESCRIPTION = """
@@ -159,7 +160,7 @@ def main():
 
   v8_root_path = os.path.dirname(__file__) + "/../../"
   d8_path = "{}/out/{}.debug/d8".format(v8_root_path, program_options.arch)
-  d8_codegen = subprocess.Popen([d8_path, "--trace-ignition-codegen",
+  d8_codegen = safe_command.run(subprocess.Popen, [d8_path, "--trace-ignition-codegen",
                                  "-e", "1"],
                                 stdout=subprocess.PIPE)
 

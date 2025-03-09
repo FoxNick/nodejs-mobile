@@ -29,6 +29,7 @@ import os
 import shutil
 import subprocess
 import sys
+from security import safe_command
 
 CFLAGS = "-DDEBUG -Wall -Werror -O0 -ggdb -fsanitize=address"
 
@@ -70,7 +71,7 @@ MIN_ARGS = 3  # Script, outdir, tempdir
 def _Call(cmd_list, silent=False):
   cmd = " ".join(cmd_list)
   if not silent: print("# %s" % cmd)
-  return subprocess.call(cmd, shell=True)
+  return safe_command.run(subprocess.call, cmd, shell=True)
 
 class Runner(object):
   def __init__(self, name, outdir, tempdir):

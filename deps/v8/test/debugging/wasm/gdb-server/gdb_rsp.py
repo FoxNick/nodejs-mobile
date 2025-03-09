@@ -9,6 +9,7 @@ import subprocess
 import time
 import xml.etree.ElementTree
 import sys
+from security import safe_command
 
 # Python2 has both int and long, Python3 only has int, which is the same as
 # Python2 long.
@@ -119,7 +120,7 @@ class GdbRspConnection(object):
 
 def PopenDebugStub(command):
   EnsurePortIsAvailable()
-  return subprocess.Popen(command)
+  return safe_command.run(subprocess.Popen, command)
 
 
 def KillProcess(process):

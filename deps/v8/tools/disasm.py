@@ -31,6 +31,7 @@ import os
 import re
 import subprocess
 import tempfile
+from security import safe_command
 
 
 # Avoid using the slow (google-specific) wrapper around objdump.
@@ -76,7 +77,7 @@ def GetDisasmLines(filename, offset, size, arch, inplace, arch_flags=""):
       offset,
       offset + size,
       filename)
-  process = subprocess.Popen(command,
+  process = safe_command.run(subprocess.Popen, command,
                              shell=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)

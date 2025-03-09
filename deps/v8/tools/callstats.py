@@ -33,6 +33,7 @@ from callstats_groups import RUNTIME_CALL_STATS_GROUPS
 
 import numpy
 from math import sqrt
+from security import safe_command
 
 
 MAX_NOF_RETRIES = 5
@@ -72,9 +73,9 @@ def start_replay_server(args, sites, discard_output=True):
   print_command(cmd_args)
   if discard_output:
     with open(os.devnull, 'w') as null:
-      server = subprocess.Popen(cmd_args, stdout=null, stderr=null)
+      server = safe_command.run(subprocess.Popen, cmd_args, stdout=null, stderr=null)
   else:
-    server = subprocess.Popen(cmd_args)
+    server = safe_command.run(subprocess.Popen, cmd_args)
   print("RUNNING REPLAY SERVER: %s with PID=%s" % (args.replay_bin, server.pid))
   print("=" * 80)
   return {'process': server, 'injection': injection}
@@ -203,7 +204,7 @@ def run_site(site, domain, args, timeout=None):
         print("- " * 40)
         with open(result, "wt") as f:
           with open(args.log_stderr or os.devnull, 'at') as err:
-            status = subprocess.call(cmd_args, stdout=f, stderr=err)
+            status = safe_command.run(subprocess.call, cmd_args, stdout=f, stderr=err)
         # 124 means timeout killed chrome, 0 means the user was bored first!
         # If none of these two happened, then chrome apparently crashed, so
         # it must be called again.

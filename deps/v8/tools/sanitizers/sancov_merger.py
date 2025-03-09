@@ -30,6 +30,7 @@ import subprocess
 import sys
 
 from multiprocessing import Pool, cpu_count
+from security import safe_command
 
 
 logging.basicConfig(level=logging.INFO)
@@ -67,8 +68,7 @@ def merge(args):
   Returns: A tuple with the executable name and the result file name.
   """
   keep, coverage_dir, executable, index, bucket = args
-  process = subprocess.Popen(
-      [SANCOV_TOOL, 'merge'] + bucket,
+  process = safe_command.run(subprocess.Popen, [SANCOV_TOOL, 'merge'] + bucket,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
       cwd=coverage_dir,
@@ -168,8 +168,7 @@ def merge_two(args):
   swarming_output_dir, coverage_dir, f = args
   input_file = os.path.join(swarming_output_dir, f)
   output_file = os.path.join(coverage_dir, f)
-  process = subprocess.Popen(
-      [SANCOV_TOOL, 'merge', input_file, output_file],
+  process = safe_command.run(subprocess.Popen, [SANCOV_TOOL, 'merge', input_file, output_file],
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
   )

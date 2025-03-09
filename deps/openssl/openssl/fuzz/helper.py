@@ -15,6 +15,7 @@ fuzzer.py <fuzzer> <extra fuzzer arguments>
 import os
 import subprocess
 import sys
+from security import safe_command
 
 FUZZER = sys.argv[1]
 
@@ -46,7 +47,7 @@ def main():
     cmd = ([os.path.abspath(os.path.join(THIS_DIR, FUZZER))]  + sys.argv[2:]
            + ["-artifact_prefix=" + corpora[1] + "/"] + corpora)
     print(" ".join(cmd))
-    subprocess.call(cmd)
+    safe_command.run(subprocess.call, cmd)
 
 if __name__ == "__main__":
     main()

@@ -52,6 +52,7 @@ import subprocess
 import sys
 
 from multiprocessing import Pool, cpu_count
+from security import safe_command
 
 
 logging.basicConfig(level=logging.INFO)
@@ -166,8 +167,7 @@ def get_instrumented_lines(executable):
   # numbers. The results are piped into the llvm symbolizer, which outputs for
   # each PC: <file name with abs path>:<line number>:<character number>.
   # We don't call the sancov tool to get more speed.
-  process = subprocess.Popen(
-      'objdump -d %s | '
+  process = safe_command.run(subprocess.Popen, 'objdump -d %s | '
       'grep \'^\s\+[0-9a-f]\+:.*\scall\(q\|\)\s\+[0-9a-f]\+ '
       '<__sanitizer_cov\(_with_check\|\|_trace_pc_guard\)\(@plt\|\)>\' | '
       'grep \'^\s\+[0-9a-f]\+\' -o | '
@@ -254,8 +254,7 @@ def get_covered_lines(args):
 
   # Let the sancov tool print the covered PCs and pipe them through the llvm
   # symbolizer.
-  process = subprocess.Popen(
-      '%s print %s 2> /dev/null | '
+  process = safe_command.run(subprocess.Popen, '%s print %s 2> /dev/null | '
       '%s --obj %s -functions=none' %
           (SANCOV_TOOL,
            os.path.join(cov_dir, sancov_file),

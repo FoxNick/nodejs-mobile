@@ -8,6 +8,7 @@ import sys
 import subprocess
 import re
 import math
+from security import safe_command
 
 INPUT_PATH = "src/parsing/keywords.txt"
 OUTPUT_PATH = "src/parsing/keywords-gen.h"
@@ -21,7 +22,7 @@ def next_power_of_2(x):
 
 
 def call_with_input(cmd, input_string=""):
-  p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  p = safe_command.run(subprocess.Popen, cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   stdout, _ = p.communicate(input_string)
   retcode = p.wait()
   if retcode != 0:

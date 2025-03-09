@@ -14,6 +14,7 @@ import random
 import subprocess
 import sys
 import tempfile
+from security import safe_command
 
 # Configuration.
 kChars = "0123456789abcdef"
@@ -110,7 +111,7 @@ class TestGenerator(object):
       with open(path, "w") as f:
         f.write(self.EmitData(count))
         f.write(self.EmitTestBody())
-      return subprocess.call("%s %s" % (binary, path),
+      return safe_command.run(subprocess.call, "%s %s" % (binary, path),
                              shell=True)
     finally:
       os.close(fd)

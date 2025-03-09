@@ -12,6 +12,7 @@ import platform
 import subprocess
 import sys
 import time
+from security import safe_command
 
 
 def is_test_name(f):
@@ -203,8 +204,7 @@ class Runner:
         start = time.time()
         cmd = [sys.executable, test] + self.gyp_options
         self.env["TESTGYP_FORMAT"] = fmt
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=self.env
+        proc = safe_command.run(subprocess.Popen, cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=self.env
         )
         proc.wait()
         took = time.time() - start

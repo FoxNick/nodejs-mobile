@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+from security import safe_command
 
 PYLIB_PATH = 'tools/clang/pylib'
 GM_PATH = 'tools/dev'
@@ -34,7 +35,7 @@ import gm
 
 def _Call(cmd, silent=False):
   if not silent: print("# %s" % cmd)
-  return subprocess.call(cmd, shell=True)
+  return safe_command.run(subprocess.call, cmd, shell=True)
 
 def _Write(filename, content):
   with open(filename, "w") as f:

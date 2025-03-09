@@ -17,6 +17,7 @@ import psutil
 import multiprocessing
 
 from unittest import result
+from security import safe_command
 
 renderer_cmd_file = Path(__file__).parent / 'linux-perf-renderer-cmd.sh'
 assert renderer_cmd_file.is_file()
@@ -148,9 +149,9 @@ with tempfile.TemporaryDirectory(prefix="chrome-") as tmp_dir_path:
     log("LINUX PERF CMD: ", shlex.join(cmd))
 
   if options.timeout is None:
-    subprocess.run(cmd)
+    safe_command.run(subprocess.run, cmd)
   else:
-    process = subprocess.Popen(cmd)
+    process = safe_command.run(subprocess.Popen, cmd)
     time.sleep(options.timeout)
     log(f"QUITING chrome child processes after {options.timeout}s timeout")
     current_process = psutil.Process()
@@ -175,7 +176,7 @@ def inject_v8_symbols(perf_dat_file):
       f"--output={output_file}"
   ]
   try:
-    subprocess.run(cmd)
+    safe_command.run(subprocess.run, cmd)
     print(f"Processed: {output_file}")
   except:
     print(shlex.join(cmd))

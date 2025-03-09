@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from security import safe_command
 
 TOOLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,7 +36,7 @@ def call_wrapper(mode):
       mode,
       state_file,
     ]
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+    proc = safe_command.run(subprocess.Popen, args, stdout=subprocess.PIPE)
     proc.communicate()
     return proc.returncode
   finally:

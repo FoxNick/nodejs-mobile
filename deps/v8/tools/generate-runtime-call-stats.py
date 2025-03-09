@@ -21,6 +21,7 @@ import sys
 import tempfile
 
 from callstats_groups import RUNTIME_CALL_STATS_GROUPS
+from security import safe_command
 
 
 JSON_FILE_EXTENSION=".pb_converted.json"
@@ -219,8 +220,7 @@ def run_benchmark(story,
   print("Output directory: %s" % output_dir)
   stdout = ""
   print(f"Running: {' '.join(command)}\n")
-  proc = subprocess.Popen(
-      command,
+  proc = safe_command.run(subprocess.Popen, command,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
       universal_newlines=True)

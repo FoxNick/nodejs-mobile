@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import sys
+from security import safe_command
 
 if __name__ == '__main__':
   # In some cases or older versions, the python executable is passed as
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     args = sys.argv[2:]
   else:
     args = sys.argv[1:]
-  process = subprocess.Popen(['python3'] + args)
-  process = subprocess.Popen(args)
+  process = safe_command.run(subprocess.Popen, ['python3'] + args)
+  process = safe_command.run(subprocess.Popen, args)
   process.communicate()
   sys.exit(process.returncode)

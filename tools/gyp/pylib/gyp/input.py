@@ -19,6 +19,7 @@ import traceback
 from distutils.version import StrictVersion
 from gyp.common import GypError
 from gyp.common import OrderedSet
+from security import safe_command
 
 # A list of types that are treated as linkable.
 linkable_types = [
@@ -961,8 +962,7 @@ def ExpandVariables(input, phase, variables, build_file):
                     # Fix up command with platform specific workarounds.
                     contents = FixupPlatformCommand(contents)
                     try:
-                        p = subprocess.Popen(
-                            contents,
+                        p = safe_command.run(subprocess.Popen, contents,
                             shell=use_shell,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,

@@ -17,6 +17,7 @@ import subprocess
 import stat
 import string
 import sys
+from security import safe_command
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -132,8 +133,7 @@ class WinTool:
         #   Popen(['/bin/sh', '-c', args[0], args[1], ...])"
         # For that reason, since going through the shell doesn't seem necessary on
         # non-Windows don't do that there.
-        link = subprocess.Popen(
-            args,
+        link = safe_command.run(subprocess.Popen, args,
             shell=sys.platform == "win32",
             env=env,
             stdout=subprocess.PIPE,
@@ -250,8 +250,7 @@ class WinTool:
     (some XML blocks are recognized by the OS loader, but not the manifest
     tool)."""
         env = self._GetEnv(arch)
-        popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        popen = safe_command.run(subprocess.Popen, args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         for line in out.splitlines():
@@ -294,8 +293,7 @@ class WinTool:
             ]
         )
         env = self._GetEnv(arch)
-        popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        popen = safe_command.run(subprocess.Popen, args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         # Filter junk out of stdout, and write filtered versions. Output we want
@@ -313,8 +311,7 @@ class WinTool:
     def ExecAsmWrapper(self, arch, *args):
         """Filter logo banner from invocations of asm.exe."""
         env = self._GetEnv(arch)
-        popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        popen = safe_command.run(subprocess.Popen, args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         for line in out.splitlines():
@@ -331,8 +328,7 @@ class WinTool:
         """Filter logo banner from invocations of rc.exe. Older versions of RC
     don't support the /nologo flag."""
         env = self._GetEnv(arch)
-        popen = subprocess.Popen(
-            args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        popen = safe_command.run(subprocess.Popen, args, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         out = popen.communicate()[0].decode("utf-8")
         for line in out.splitlines():
@@ -355,7 +351,7 @@ class WinTool:
                 env[k] = v
         args = open(rspfile).read()
         dir = dir[0] if dir else None
-        return subprocess.call(args, shell=True, env=env, cwd=dir)
+        return safe_command.run(subprocess.call, args, shell=True, env=env, cwd=dir)
 
     def ExecClCompile(self, project_dir, selected_files):
         """Executed by msvs-ninja projects when the 'ClCompile' target is used to
@@ -367,7 +363,7 @@ class WinTool:
         ]
         cmd = ["ninja.exe"]
         cmd.extend(ninja_targets)
-        return subprocess.call(cmd, shell=True, cwd=BASE_DIR)
+        return safe_command.run(subprocess.call, cmd, shell=True, cwd=BASE_DIR)
 
 
 if __name__ == "__main__":

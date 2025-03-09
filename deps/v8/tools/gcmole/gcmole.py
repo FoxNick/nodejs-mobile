@@ -19,6 +19,7 @@ import subprocess
 import sys
 import threading
 import queue
+from security import safe_command
 
 
 ArchCfg = collections.namedtuple(
@@ -136,7 +137,7 @@ def invoke_clang_plugin_for_file(filename, cmd_line, verbose):
   args = list(map(str, args))
   if verbose:
     print("popen ", " ".join(args))
-  p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  p = safe_command.run(subprocess.Popen, args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   stdout, stderr = p.communicate()
   return p.returncode, stdout.decode("utf-8"), stderr.decode("utf-8")
 
