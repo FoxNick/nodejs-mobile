@@ -9,6 +9,7 @@ import os
 import subprocess
 import glob
 import shutil
+from security import safe_command
 
 
 FILES_TO_SYNC = [
@@ -62,7 +63,7 @@ FILES_TO_SYNC = [
 
 
 def RunCmd(cmd):
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+  p = safe_command.run(subprocess.Popen, cmd, stdout=subprocess.PIPE)
   (stdoutdata, stderrdata) = p.communicate()
   if p.returncode != 0:
     raise Exception('%s: exit status %d', str(cmd), p.returncode)

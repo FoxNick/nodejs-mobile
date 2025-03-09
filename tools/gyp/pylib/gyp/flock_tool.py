@@ -11,6 +11,7 @@ import os
 import struct
 import subprocess
 import sys
+from security import safe_command
 
 
 def main(args):
@@ -48,7 +49,7 @@ class FlockTool:
         else:
             op = struct.pack("hhllhhl", fcntl.F_WRLCK, 0, 0, 0, 0, 0, 0)
         fcntl.fcntl(fd, fcntl.F_SETLK, op)
-        return subprocess.call(cmd_list)
+        return safe_command.run(subprocess.call, cmd_list)
 
 
 if __name__ == "__main__":

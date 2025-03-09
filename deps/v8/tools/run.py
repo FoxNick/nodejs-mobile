@@ -8,8 +8,9 @@ scripts."""
 
 import subprocess
 import sys
+from security import safe_command
 
-result = subprocess.call(sys.argv[1:])
+result = safe_command.run(subprocess.call, sys.argv[1:])
 if result != 0:
   # Windows error codes such as 0xC0000005 and 0xC0000409 are much easier
   # to recognize and differentiate in hex.

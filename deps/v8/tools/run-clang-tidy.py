@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+from security import safe_command
 
 CLANG_TIDY_WARNING = re.compile(r'(\/.*?)\ .*\[(.*)\]$')
 CLANG_TIDY_CMDLINE_OUT = re.compile(r'^clang-tidy.*\ .*|^\./\.\*')
@@ -101,8 +102,7 @@ def ClangTidyRunFull(build_folder, skip_output_filter, checks, auto_fix):
     extra_args.append('-*, ' + checks)
 
   with open(os.devnull, 'w') as DEVNULL:
-    ct_process = subprocess.Popen(
-      ['run-clang-tidy', '-j' + str(THREADS), '-p', '.']
+    ct_process = safe_command.run(subprocess.Popen, ['run-clang-tidy', '-j' + str(THREADS), '-p', '.']
        + ['-header-filter'] + HEADER_REGEX + extra_args
        + FILE_REGEXS,
       cwd=build_folder,
@@ -141,8 +141,7 @@ def ClangTidyRunAggregate(build_folder, print_files):
   Run clang-tidy on the full codebase and aggregate warnings into categories.
   """
   with open(os.devnull, 'w') as DEVNULL:
-    ct_process = subprocess.Popen(
-      ['run-clang-tidy', '-j' + str(THREADS), '-p', '.'] +
+    ct_process = safe_command.run(subprocess.Popen, ['run-clang-tidy', '-j' + str(THREADS), '-p', '.'] +
         ['-header-filter'] + HEADER_REGEX +
         FILE_REGEXS,
       cwd=build_folder,
@@ -190,8 +189,7 @@ def ClangTidyRunDiff(build_folder, diff_branch, auto_fix):
     modified_build_folder += ' -header-filter='
     modified_build_folder += '\'' + ''.join(HEADER_REGEX) + '\''
 
-    ct_ps = subprocess.Popen(
-      ['clang-tidy-diff.py', '-path', modified_build_folder, '-p1'] +
+    ct_ps = safe_command.run(subprocess.Popen, ['clang-tidy-diff.py', '-path', modified_build_folder, '-p1'] +
         extra_args,
       stdin=git_ps.stdout,
       stdout=subprocess.PIPE,
@@ -249,7 +247,7 @@ def ClangTidyRunSingleFile(build_folder, filename_to_check, auto_fix,
       if auto_fix:
         extra_args.append('-fix')
 
-      subprocess.call(['clang-tidy', '-p', '.'] +
+      safe_command.run(subprocess.call, ['clang-tidy', '-p', '.'] +
                       extra_args +
                       [file_with_relative_path],
                       cwd=build_folder,

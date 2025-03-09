@@ -122,6 +122,7 @@ from testrunner.local import android
 from testrunner.local import command
 from testrunner.local import utils
 from testrunner.objects.output import Output, NULL_OUTPUT
+from security import safe_command
 
 
 SUPPORTED_ARCHS = ['arm',
@@ -275,8 +276,7 @@ def RunResultsProcessor(results_processor, output, count):
 
   # We assume the results processor is relative to the suite.
   assert os.path.exists(results_processor)
-  p = subprocess.Popen(
-      [sys.executable, results_processor],
+  p = safe_command.run(subprocess.Popen, [sys.executable, results_processor],
       stdin=subprocess.PIPE,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,

@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 import glob
+from security import safe_command
 
 
 def JoinPath(*args):
@@ -171,7 +172,7 @@ def _RegistryQueryBase(sysdir, key, value):
     cmd = [os.path.join(os.environ.get("WINDIR", ""), sysdir, "reg.exe"), "query", key]
     if value:
         cmd.extend(["/v", value])
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = safe_command.run(subprocess.Popen, cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Obtain the stdout from reg.exe, reading to the end so p.returncode is valid
     # Note that the error text may be in [1] in some cases
     text = p.communicate()[0].decode("utf-8")

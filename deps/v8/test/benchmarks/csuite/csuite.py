@@ -38,6 +38,7 @@ import os
 from optparse import OptionParser
 import subprocess
 import sys
+from security import safe_command
 
 if __name__ == '__main__':
   parser = OptionParser(usage=__doc__)
@@ -149,7 +150,7 @@ if __name__ == '__main__':
 
   if opts.verbose:
     print("Spawning subprocess: %s." % cmdline)
-  return_code = subprocess.call(cmdline, shell=True, cwd=suite_path)
+  return_code = safe_command.run(subprocess.call, cmdline, shell=True, cwd=suite_path)
   if return_code < 0:
     print("Error return code: %d." % return_code)
 
@@ -161,6 +162,6 @@ if __name__ == '__main__':
     cmdline = "python %s  %s -f %s" % (compare_baseline_py_path, output_file, output_file_compare)
     if opts.verbose:
       print("Spawning subprocess: %s." % cmdline)
-    return_code = subprocess.call(cmdline, shell=True, cwd=suite_path)
+    return_code = safe_command.run(subprocess.call, cmdline, shell=True, cwd=suite_path)
     if return_code < 0:
       print("Error return code: %d." % return_code)

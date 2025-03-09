@@ -43,6 +43,7 @@ from os.path import join, dirname, abspath
 import subprocess
 import sys
 import tempfile
+from security import safe_command
 
 def Check(output, errors):
   failed = any([s.startswith('/system/bin/sh:') or s.startswith('ANDROID')
@@ -52,8 +53,7 @@ def Check(output, errors):
 def Execute(cmdline):
   (fd_out, outname) = tempfile.mkstemp()
   (fd_err, errname) = tempfile.mkstemp()
-  process = subprocess.Popen(
-    args=cmdline,
+  process = safe_command.run(subprocess.Popen, args=cmdline,
     shell=True,
     stdout=fd_out,
     stderr=fd_err,

@@ -11,6 +11,7 @@ import sys
 from threading import Event, Timer
 
 import v8_fuzz_config
+from security import safe_command
 
 PYTHON3 = sys.version_info >= (3, 0)
 
@@ -119,8 +120,7 @@ def Execute(args, cwd, timeout=None):
   if PYTHON3:
     kwargs['encoding'] = 'utf-8'
   try:
-    process = subprocess.Popen(
-      args=popen_args,
+    process = safe_command.run(subprocess.Popen, args=popen_args,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
       cwd=cwd,

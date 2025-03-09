@@ -25,6 +25,7 @@ import struct
 import threading
 import subprocess
 import SocketServer # TODO(leszeks): python 3 compatibility
+from security import safe_command
 
 def CreateFileHandlerClass(root_dirs, verbose):
   class FileHandler(SocketServer.BaseRequestHandler):
@@ -65,13 +66,11 @@ def TransferD8ToDevice(adb, build_dir, device_d8_dir, verbose):
 
   # Pipe the output of md5sum from the local computer to the device, checking
   # the md5 hashes on the device.
-  local_md5_sum_proc = subprocess.Popen(
-    ["md5sum"] + files_to_copy,
+  local_md5_sum_proc = safe_command.run(subprocess.Popen, ["md5sum"] + files_to_copy,
     cwd=build_dir,
     stdout=subprocess.PIPE
   )
-  device_md5_check_proc = subprocess.Popen(
-    [
+  device_md5_check_proc = safe_command.run(subprocess.Popen, [
       adb, "shell",
       "mkdir -p '{0}' ; cd '{0}' ; md5sum -c -".format(device_d8_dir)
     ],
@@ -123,7 +122,7 @@ def AdbRunD8(adb, device_d8_dir, device_port, d8_args, verbose):
 
   if verbose:
     print("Running {}".format(" ".join(cmd)))
-  return subprocess.call(cmd)
+  return safe_command.run(subprocess.call, cmd)
 
 
 def PrintUsage(file=sys.stdout):

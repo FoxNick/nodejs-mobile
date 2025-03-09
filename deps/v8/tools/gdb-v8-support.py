@@ -34,6 +34,7 @@ import os
 import subprocess
 import time
 import gdb
+from security import safe_command
 
 kSmiTag = 0
 kSmiTagSize = 1
@@ -232,7 +233,7 @@ GDB_EXTERNAL_EDITOR environment variable.
         if 'GDB_EXTERNAL_EDITOR' in os.environ:
           open_cmd = os.environ['GDB_EXTERNAL_EDITOR']
           print("Opening '%s' with %s" % (file, open_cmd))
-          subprocess.call([open_cmd, file])
+          safe_command.run(subprocess.call, [open_cmd, file])
         else:
           print("Output written to:\n '%s'" % file)
       finally:

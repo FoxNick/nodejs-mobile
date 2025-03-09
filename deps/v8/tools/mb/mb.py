@@ -27,6 +27,7 @@ import sys
 import subprocess
 import tempfile
 import traceback
+from security import safe_command
 
 # for py2/py3 compatibility
 try:
@@ -1146,14 +1147,14 @@ class MetaBuildWrapper(object):
 
   def Call(self, cmd, env=None, buffer_output=True):
     if buffer_output:
-      p = subprocess.Popen(cmd, shell=False, cwd=self.chromium_src_dir,
+      p = safe_command.run(subprocess.Popen, cmd, shell=False, cwd=self.chromium_src_dir,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                            env=env)
       out, err = p.communicate()
       out = out.decode('utf-8')
       err = err.decode('utf-8')
     else:
-      p = subprocess.Popen(cmd, shell=False, cwd=self.chromium_src_dir,
+      p = safe_command.run(subprocess.Popen, cmd, shell=False, cwd=self.chromium_src_dir,
                            env=env)
       p.wait()
       out = err = ''

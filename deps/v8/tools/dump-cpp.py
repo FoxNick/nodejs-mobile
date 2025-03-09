@@ -14,6 +14,7 @@ import platform
 import re
 import subprocess
 import sys
+from security import safe_command
 
 def is_file_executable(fPath):
   return os.path.isfile(fPath) and os.access(fPath, os.X_OK)
@@ -54,7 +55,7 @@ if __name__ == '__main__':
   args = [d8_exec] + ['--module'] + JS_FILES + ['--'] + args
 
   with open(log_file) as f:
-    sp = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    sp = safe_command.run(subprocess.Popen, args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           stdin=f)
     out, err = sp.communicate()
   if debug:

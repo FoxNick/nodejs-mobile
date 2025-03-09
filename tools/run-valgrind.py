@@ -31,6 +31,7 @@ from __future__ import print_function
 from os import path
 import subprocess
 import sys
+from security import safe_command
 
 NODE_ROOT = path.dirname(path.dirname(path.abspath(__file__)))
 
@@ -56,7 +57,7 @@ command = VALGRIND_ARGUMENTS + [executable, '--zero-fill-buffers']
 command += sys.argv[2:]
 
 # Run valgrind.
-process = subprocess.Popen(command, stderr=subprocess.PIPE)
+process = safe_command.run(subprocess.Popen, command, stderr=subprocess.PIPE)
 code = process.wait()
 errors = process.stderr.readlines()
 

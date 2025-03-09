@@ -15,6 +15,7 @@ import io
 from pathlib import Path
 
 from distutils.version import StrictVersion
+from security import safe_command
 
 # If not run from node/, cd to node/.
 os.chdir(Path(__file__).parent)
@@ -932,7 +933,7 @@ def pkg_config(pkg):
     else:
       args += [pkg]
     try:
-      proc = subprocess.Popen(shlex.split(pkg_config) + args,
+      proc = safe_command.run(subprocess.Popen, shlex.split(pkg_config) + args,
                               stdout=subprocess.PIPE)
       with proc:
         val = to_utf8(proc.communicate()[0]).strip()
@@ -947,7 +948,7 @@ def pkg_config(pkg):
 
 def try_check_compiler(cc, lang):
   try:
-    proc = subprocess.Popen(shlex.split(cc) + ['-E', '-P', '-x', lang, '-'],
+    proc = safe_command.run(subprocess.Popen, shlex.split(cc) + ['-E', '-P', '-x', lang, '-'],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   except OSError:
     return (False, False, '', '')
@@ -976,7 +977,7 @@ def try_check_compiler(cc, lang):
 #
 def get_version_helper(cc, regexp):
   try:
-    proc = subprocess.Popen(shlex.split(cc) + ['-v'], stdin=subprocess.PIPE,
+    proc = safe_command.run(subprocess.Popen, shlex.split(cc) + ['-v'], stdin=subprocess.PIPE,
                             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
   except OSError:
     error('''No acceptable C compiler found!
@@ -992,7 +993,7 @@ def get_version_helper(cc, regexp):
 
 def get_nasm_version(asm):
   try:
-    proc = subprocess.Popen(shlex.split(asm) + ['-v'],
+    proc = safe_command.run(subprocess.Popen, shlex.split(asm) + ['-v'],
                             stdin=subprocess.PIPE, stderr=subprocess.PIPE,
                             stdout=subprocess.PIPE)
   except OSError:
@@ -1019,7 +1020,7 @@ def get_gas_version(cc):
   try:
     custom_env = os.environ.copy()
     custom_env["LC_ALL"] = "C"
-    proc = subprocess.Popen(shlex.split(cc) + ['-Wa,-v', '-c', '-o',
+    proc = safe_command.run(subprocess.Popen, shlex.split(cc) + ['-Wa,-v', '-c', '-o',
                                                '/dev/null', '-x',
                                                'assembler',  '/dev/null'],
                             stdin=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -1092,7 +1093,7 @@ def cc_macros(cc=None):
   """Checks predefined macros using the C compiler command."""
 
   try:
-    p = subprocess.Popen(shlex.split(cc or CC) + ['-dM', '-E', '-'],
+    p = safe_command.run(subprocess.Popen, shlex.split(cc or CC) + ['-dM', '-E', '-'],
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -1997,7 +1998,7 @@ def configure_inspector(o):
 
 def configure_section_file(o):
   try:
-    proc = subprocess.Popen(['ld.gold'] + ['-v'], stdin = subprocess.PIPE,
+    proc = safe_command.run(subprocess.Popen, ['ld.gold'] + ['-v'], stdin = subprocess.PIPE,
                             stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   except OSError:
     if options.node_section_ordering_info != "":

@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import time
+from security import safe_command
 
 def GeometricMean(numbers):
   log = sum([math.log(n) for n in numbers])
@@ -145,7 +146,7 @@ class BenchmarkRunner(object):
         continue
       print("run #%d" % i)
       cmdline = "%s > %s" % (self.opts.command, outfile)
-      subprocess.call(cmdline, shell=True)
+      safe_command.run(subprocess.call, cmdline, shell=True)
       time.sleep(self.opts.sleep)
 
   def ProcessLine(self, line):

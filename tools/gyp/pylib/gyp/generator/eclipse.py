@@ -25,6 +25,7 @@ import gyp.common
 import gyp.msvs_emulation
 import shlex
 import xml.etree.cElementTree as ET
+from security import safe_command
 
 generator_wants_static_library_dependencies_adjusted = False
 
@@ -97,8 +98,7 @@ def GetAllIncludeDirectories(
     if compiler_path:
         command = shlex.split(compiler_path)
         command.extend(["-E", "-xc++", "-v", "-"])
-        proc = subprocess.Popen(
-            args=command,
+        proc = safe_command.run(subprocess.Popen, args=command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -238,8 +238,7 @@ def GetAllDefines(target_list, target_dicts, data, config_name, params, compiler
     if compiler_path:
         command = shlex.split(compiler_path)
         command.extend(["-E", "-dM", "-"])
-        cpp_proc = subprocess.Popen(
-            args=command, cwd=".", stdin=subprocess.PIPE, stdout=subprocess.PIPE
+        cpp_proc = safe_command.run(subprocess.Popen, args=command, cwd=".", stdin=subprocess.PIPE, stdout=subprocess.PIPE
         )
         cpp_output = cpp_proc.communicate()[0].decode("utf-8")
         cpp_lines = cpp_output.split("\n")

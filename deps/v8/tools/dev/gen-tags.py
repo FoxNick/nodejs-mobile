@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import subprocess
 import sys
+from security import safe_command
 
 # All arches that this script understands.
 ARCHES = ["ia32", "x64", "arm", "arm64", "mips", "mips64", "ppc", "s390"]
@@ -33,7 +34,7 @@ def PrintHelpAndExit():
 
 def _Call(cmd, silent=False):
   if not silent: print("# %s" % cmd)
-  return subprocess.call(cmd, shell=True)
+  return safe_command.run(subprocess.call, cmd, shell=True)
 
 
 def ParseArguments(argv):
