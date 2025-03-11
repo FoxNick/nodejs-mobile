@@ -31,12 +31,16 @@ BUILD_ARCH() {
   # 新增环境变量
   export AR=$ANDROID_NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
   export RANLIB=$ANDROID_NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+  export STRIP=$ANDROID_NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+  export CFLAGS="-fPIC -static -Oz -DANDROID -D__ANDROID_API__=$ANDROID_SDK_VERSION"
+  export LDFLAGS="-static -Wl,--gc-sections -llog -landroid"
   
   eval '"./android-configure" "$ANDROID_NDK_PATH" $ANDROID_SDK_VERSION $TARGET_ARCH \
     -DANDROID_STL="c++_static" \
     -DCMAKE_CXX_FLAGS="-fPIC -static-libstdc++" \
     -DCMAKE_EXE_LINKER_FLAGS="-static -llog -landroid"'
   make -j $(getconf _NPROCESSORS_ONLN)
+  $STRIP --strip-unneeded out/Release/node
 
   # Move binaries
   TARGET_ARCH_FOLDER="$TARGET_ARCH"
