@@ -35,10 +35,7 @@ BUILD_ARCH() {
   export CFLAGS="-fPIC -static -Oz -DANDROID -D__ANDROID_API__=$ANDROID_SDK_VERSION"
   export LDFLAGS="-static -Wl,--gc-sections -llog -landroid"
   
-  eval '"./android-configure" "$ANDROID_NDK_PATH" $ANDROID_SDK_VERSION $TARGET_ARCH \
-    -DANDROID_STL="c++_static" \
-    -DCMAKE_CXX_FLAGS="-fPIC -static-libstdc++" \
-    -DCMAKE_EXE_LINKER_FLAGS="-static -llog -landroid"'
+  eval '"./android-configure" "$ANDROID_NDK_PATH" $ANDROID_SDK_VERSION $TARGET_ARCH'
   make -j $(getconf _NPROCESSORS_ONLN)
   $STRIP --strip-unneeded out/Release/node
 
