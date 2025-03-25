@@ -198,7 +198,7 @@ def initialize_jinja_env(jinja_dir, cache_dir, config):
     bytecode_cache=jinja2.FileSystemBytecodeCache(cache_dir),
     keep_trailing_newline=True,  # newline-terminate generated files
     lstrip_blocks=True,  # so can indent control flow tags
-    trim_blocks=True)
+    trim_blocks=True, autoescape=True)
   jinja_env.filters.update({
       "to_title_case": to_title_case,
       "dash_to_camelcase": dash_to_camelcase,
