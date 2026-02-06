@@ -1,0 +1,538 @@
+name: Build Static PHP for Android - Optimized
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP版本'
+        required: true
+        default: '8.3.4'  # 使用最新的稳定版
+      min_sdk:
+        description: '最低Android SDK版本'
+        required: false
+        default: '24'  # Android 7.0+，覆盖大部分设备
+
+env:
+  # 使用最新的NDK，支持更好的优化
+  NDK_VERSION: 'r26c'
+  PHP_VERSION: '8.3.4'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        # 主要支持现代架构，x86可移除
+        arch: [arm64-v8a, armeabi-v7a, x86_64]
+        include:
+          - arch: arm64-v8a
+            host: aarch64-linux-android
+            triple: aarch64-linux-android
+            abi: aarch64-linux-android
+          - arch: armeabi-v7a
+            host: armv7a-linux-androideabi
+            triple: arm-linux-androideabi
+            abi: arm-linux-androideabi
+          - arch: x86_64
+            host: x86_64-linux-android
+            triple: x86_64-linux-android
+            abi: x86_64-linux-android
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置构建环境
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          wget tar xz-utils \
+          make autoconf automake libtool \
+          pkg-config bison re2c \
+          libxml2-dev libssl-dev libcurl4-openssl-dev \
+          libsqlite3-dev libonig-dev \
+          libzip-dev libpng-dev libjpeg-dev \
+          libfreetype6-dev \
+          libbz2-dev libgmp-dev libicu-dev \
+          libsodium-dev libargon2-dev
+
+    - name: 下载并配置Android NDK
+      run: |
+        NDK_ZIP="android-ndk-${{ env.NDK_VERSION }}-linux.zip"
+        wget -q "https://dl.google.com/android/repository/$NDK_ZIP"
+        unzip -q "$NDK_ZIP" -d /tmp
+        export ANDROID_NDK_ROOT="/tmp/android-ndk-${{ env.NDK_VERSION }}"
+        
+        # 创建独立的工具链（性能更好）
+        API_LEVEL=${{ github.event.inputs.min_sdk || '24' }}
+        TOOLCHAIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64"
+        
+        echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT" >> $GITHUB_ENV
+        echo "TOOLCHAIN=$TOOLCHAIN" >> $GITHUB_ENV
+        echo "API_LEVEL=$API_LEVEL" >> $GITHUB_ENV
+        
+        # 设置编译工具
+        echo "CC=$TOOLCHAIN/bin/${matrix.host}$API_LEVEL-clang" >> $GITHUB_ENV
+        echo "CXX=$TOOLCHAIN/bin/${matrix.host}$API_LEVEL-clang++" >> $GITHUB_ENV
+        echo "AR=$TOOLCHAIN/bin/llvm-ar" >> $GITHUB_ENV
+        echo "RANLIB=$TOOLCHAIN/bin/llvm-ranlib" >> $GITHUB_ENV
+        echo "STRIP=$TOOLCHAIN/bin/llvm-strip" >> $GITHUB_ENV
+
+    - name: 下载PHP源码
+      run: |
+        PHP_VERSION=${{ github.event.inputs.php_version || env.PHP_VERSION }}
+        PHP_URL="https://www.php.net/distributions/php-$PHP_VERSION.tar.xz"
+        echo "下载PHP $PHP_VERSION..."
+        wget -q "$PHP_URL"
+        tar -xf "php-$PHP_VERSION.tar.xz"
+        echo "PHP_SOURCE_DIR=$(pwd)/php-$PHP_VERSION" >> $GITHUB_ENV
+        echo "PHP_VERSION=$PHP_VERSION" >> $GITHUB_ENV
+
+    - name: 下载第三方库源码（静态编译）
+      run: |
+        cd "$PHP_SOURCE_DIR"
+        mkdir -p libs && cd libs
+        
+        # 下载最新稳定版的库
+        LIBS=(
+          "https://www.zlib.net/zlib-1.3.tar.gz"
+          "https://www.openssl.org/source/openssl-3.2.0.tar.gz"
+          "https://curl.se/download/curl-8.6.0.tar.xz"
+          "https://sqlite.org/2024/sqlite-autoconf-3450100.tar.gz"
+          "https://github.com/jedisct1/libsodium/releases/download/1.0.19/libsodium-1.0.19.tar.gz"
+          "https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz"
+          "https://github.com/libzip/libzip/releases/download/v1.10.1/libzip-1.10.1.tar.xz"
+          "https://ftp.pcre.org/pub/pcre/pcre2-10.42.tar.bz2"
+          "https://github.com/unicode-org/icu/releases/download/release-74-1/icu4c-74_1-src.tgz"
+        )
+        
+        for url in "${LIBS[@]}"; do
+          filename=$(basename "$url")
+          echo "下载: $filename"
+          wget -q "$url"
+          
+          if [[ "$filename" == *.tar.gz ]]; then
+            tar -xzf "$filename"
+          elif [[ "$filename" == *.tar.xz ]]; then
+            tar -xf "$filename"
+          elif [[ "$filename" == *.tar.bz2 ]]; then
+            tar -xjf "$filename"
+          fi
+        done
+
+    - name: 编译第三方库（静态）
+      run: |
+        cd "$PHP_SOURCE_DIR/libs"
+        
+        # 设置通用编译参数
+        export COMMON_FLAGS="-fPIC -O3 -flto -D__ANDROID_API__=$API_LEVEL"
+        export SYSROOT="$TOOLCHAIN/sysroot"
+        
+        # 1. 编译zlib
+        cd zlib-*
+        ./configure --static --prefix="$SYSROOT/usr"
+        make -j$(nproc)
+        make install
+        cd ..
+        
+        # 2. 编译OpenSSL (静态，关闭不安全的协议)
+        cd openssl-*
+        ./Configure android-${matrix.arch%%-*} \
+          -D__ANDROID_API__=$API_LEVEL \
+          no-shared no-ssl3 no-weak-ssl-ciphers \
+          --prefix="$SYSROOT/usr" \
+          --openssldir="$SYSROOT/etc/ssl"
+        make -j$(nproc)
+        make install_sw
+        cd ..
+        
+        # 3. 编译curl（静态，禁用不必要的功能）
+        cd curl-*
+        ./configure \
+          --host=${{ matrix.host }} \
+          --disable-shared \
+          --enable-static \
+          --with-openssl="$SYSROOT/usr" \
+          --with-zlib="$SYSROOT/usr" \
+          --disable-ftp \
+          --disable-file \
+          --disable-ldap \
+          --disable-ldaps \
+          --disable-rtsp \
+          --disable-proxy \
+          --disable-dict \
+          --disable-telnet \
+          --disable-tftp \
+          --disable-pop3 \
+          --disable-imap \
+          --disable-smb \
+          --disable-smtp \
+          --disable-gopher \
+          --without-librtmp \
+          --without-libidn2 \
+          --prefix="$SYSROOT/usr"
+        make -j$(nproc)
+        make install
+        cd ..
+        
+        # 4. 编译SQLite（静态）
+        cd sqlite-*
+        ./configure \
+          --host=${{ matrix.host }} \
+          --disable-shared \
+          --enable-static \
+          --prefix="$SYSROOT/usr"
+        make -j$(nproc)
+        make install
+        cd ..
+        
+        # 5. 编译libsodium（静态）
+        cd libsodium-*
+        ./configure \
+          --host=${{ matrix.host }} \
+          --disable-shared \
+          --enable-static \
+          --prefix="$SYSROOT/usr"
+        make -j$(nproc)
+        make install
+        cd ..
+        
+        # 6. 编译libzip（静态）
+        cd libzip-*
+        mkdir build && cd build
+        cmake .. \
+          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+          -DANDROID_ABI=${{ matrix.arch }} \
+          -DANDROID_NATIVE_API_LEVEL=$API_LEVEL \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DCMAKE_INSTALL_PREFIX="$SYSROOT/usr"
+        make -j$(nproc)
+        make install
+        cd ../..
+        
+        echo "第三方库编译完成"
+
+    - name: 配置PHP - 优化版
+      run: |
+        cd "$PHP_SOURCE_DIR"
+        
+        # 清理之前的构建
+        rm -rf build-optimized
+        mkdir build-optimized && cd build-optimized
+        
+        # 安卓特定的优化标志
+        export CFLAGS="-static -Os -flto -fPIE -fPIC -D__ANDROID_API__=$API_LEVEL"
+        export CXXFLAGS="-static -Os -flto -fPIE -fPIC -D__ANDROID_API__=$API_LEVEL"
+        export LDFLAGS="-static -flto -pie -Wl,--gc-sections -Wl,-s"
+        export LIBS="-ldl -lm -llog -landroid"
+        
+        # PKG_CONFIG路径
+        export PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig"
+        export PKG_CONFIG="pkg-config --static"
+        
+        # 优化的配置选项
+        CONFIG_OPTS="
+          --host=${{ matrix.host }}
+          --target=${{ matrix.abi }}
+          --prefix=/data/local/tmp/php
+          
+          # 构建类型
+          --enable-cli
+          --disable-cgi
+          --disable-phpdbg
+          --disable-fpm
+          --disable-all
+          --without-pear
+          --enable-static=yes
+          --disable-shared
+          
+          # 核心扩展（安卓常用）
+          --enable-bcmath
+          --enable-calendar
+          --enable-ctype
+          --enable-dom
+          --enable-exif
+          --enable-fileinfo
+          --enable-filter
+          --enable-ftp
+          --enable-gd
+          --enable-hash
+          --enable-json
+          --enable-mbstring
+          --enable-mysqlnd
+          --enable-opcache
+          --enable-pcntl
+          --enable-pdo
+          --enable-phar
+          --enable-posix
+          --enable-session
+          --enable-simplexml
+          --enable-sockets
+          --enable-tokenizer
+          --enable-xml
+          --enable-xmlreader
+          --enable-xmlwriter
+          --enable-zip
+          
+          # 常用扩展
+          --with-openssl
+          --with-curl
+          --with-zlib
+          --with-bz2
+          --with-sqlite3
+          --with-pdo-sqlite
+          --with-mysqli=mysqlnd
+          --with-pdo-mysql=mysqlnd
+          --with-sodium
+          --with-gettext=shared
+          --with-iconv=shared
+          
+          # 移除不常用的扩展
+          --without-tidy
+          --without-xsl
+          --without-readline
+          --without-password-argon2
+          --without-pdo-pgsql
+          --without-pgsql
+          --without-pspell
+          --without-enchant
+          --without-ffi
+          --without-gmp
+          --without-libxml  # 使用内置的
+          
+          # GD配置（简化）
+          --with-gd
+          --enable-gd-native-ttf
+          --with-jpeg
+          --with-freetype
+          --with-png
+          --without-webp
+          --without-xpm
+          
+          # 静态链接
+          --with-pic
+          --with-zlib=static
+          --with-curl=static
+          --with-openssl=static
+          --with-sodium=static
+          --with-sqlite3=static
+          
+          # 安卓优化
+          --disable-rpath
+          --without-valgrind
+          --disable-debug
+        "
+        
+        echo "配置参数:"
+        echo "$CONFIG_OPTS"
+        
+        ../configure $CONFIG_OPTS \
+          CC="$CC" \
+          CXX="$CXX" \
+          AR="$AR" \
+          RANLIB="$RANLIB" \
+          STRIP="$STRIP"
+
+    - name: 编译PHP
+      run: |
+        cd "$PHP_SOURCE_DIR/build-optimized"
+        
+        # 编译
+        make -j$(nproc)
+        
+        # 检查是否静态链接
+        echo "检查二进制文件:"
+        file sapi/cli/php
+        
+        # 移除调试符号和冗余部分
+        $STRIP --strip-all sapi/cli/php
+        
+        # 检查最终大小
+        echo "最终文件大小:"
+        ls -lh sapi/cli/php
+
+    - name: 创建优化包
+      run: |
+        ARCH=${{ matrix.arch }}
+        OUTPUT_DIR="$GITHUB_WORKSPACE/output/$ARCH"
+        mkdir -p "$OUTPUT_DIR"
+        
+        # 复制二进制文件
+        cp "$PHP_SOURCE_DIR/build-optimized/sapi/cli/php" "$OUTPUT_DIR/"
+        
+        # 创建最小化的PHP配置文件
+        cat > "$OUTPUT_DIR/php.ini" << 'EOF'
+        ; 最小化PHP配置 for Android
+        memory_limit = 128M
+        max_execution_time = 300
+        max_input_time = 300
+        post_max_size = 32M
+        upload_max_filesize = 32M
+        error_reporting = E_ALL
+        display_errors = Off
+        log_errors = On
+        date.timezone = UTC
+        short_open_tag = Off
+        zend.enable_gc = On
+        opcache.enable = 1
+        opcache.enable_cli = 1
+        opcache.memory_consumption = 64
+        opcache.interned_strings_buffer = 8
+        EOF
+        
+        # 创建启动脚本
+        cat > "$OUTPUT_DIR/launch.sh" << 'EOF'
+        #!/system/bin/sh
+        # PHP Android启动脚本
+
+        DIR="$(cd "$(dirname "$0")" && pwd)"
+        PHP_BIN="$DIR/php"
+
+        # 设置环境
+        export TMPDIR="/data/local/tmp"
+        export HOME="/sdcard"
+        export PHP_INI_SCAN_DIR="$DIR"
+
+        # 执行PHP
+        exec "$PHP_BIN" -c "$DIR/php.ini" "$@"
+        EOF
+        
+        chmod +x "$OUTPUT_DIR/launch.sh"
+        chmod +x "$OUTPUT_DIR/php"
+        
+        # 生成版本信息
+        "$OUTPUT_DIR/php" --version > "$OUTPUT_DIR/version.txt"
+        "$OUTPUT_DIR/php" -m > "$OUTPUT_DIR/extensions.txt"
+        
+        echo "=== 扩展列表 ($ARCH) ==="
+        cat "$OUTPUT_DIR/extensions.txt"
+        
+        # 打包
+        cd "$OUTPUT_DIR"
+        tar -czf "$GITHUB_WORKSPACE/php-android-$ARCH.tar.gz" \
+          php \
+          php.ini \
+          launch.sh \
+          version.txt \
+          extensions.txt
+
+    - name: 创建独立二进制文件
+      run: |
+        ARCH=${{ matrix.arch }}
+        PHP_BIN="$GITHUB_WORKSPACE/output/$ARCH/php"
+        
+        # 直接压缩二进制文件（最小化）
+        gzip -9 -k -c "$PHP_BIN" > "$GITHUB_WORKSPACE/php-$ARCH.gz"
+        
+        # 计算文件大小
+        echo "=== 文件大小 ($ARCH) ==="
+        ls -lh "$GITHUB_WORKSPACE/php-$ARCH.gz"
+        ls -lh "$PHP_BIN"
+
+    - name: 测试二进制
+      run: |
+        ARCH=${{ matrix.arch }}
+        PHP_BIN="$GITHUB_WORKSPACE/output/$ARCH/php"
+        
+        echo "=== 测试 $ARCH ==="
+        
+        # 使用QEMU进行基本测试
+        case "$ARCH" in
+          arm64-v8a)
+            qemu-aarch64-static "$PHP_BIN" --version 2>&1 | head -5
+            ;;
+          armeabi-v7a)
+            qemu-arm-static "$PHP_BIN" --version 2>&1 | head -5
+            ;;
+          x86_64)
+            echo "跳过x86_64模拟测试"
+            ;;
+        esac
+        
+        # 检查可执行权限
+        echo "权限: $(stat -c %A "$PHP_BIN")"
+        echo "ELF信息:"
+        readelf -h "$PHP_BIN" | grep -E "(Class|Machine|Type)"
+
+    - name: 汇总构建信息
+      run: |
+        echo "# PHP for Android 构建汇总" > "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "## 版本信息" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "- PHP版本: ${{ env.PHP_VERSION }}" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "- NDK版本: ${{ env.NDK_VERSION }}" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "- 目标SDK: ${{ env.API_LEVEL || github.event.inputs.min_sdk || '24' }}" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "- 构建时间: $(date)" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        echo "## 包含的扩展" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+        
+        for arch in arm64-v8a armeabi-v7a x86_64; do
+          if [ -f "$GITHUB_WORKSPACE/output/$arch/extensions.txt" ]; then
+            echo "### $arch" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+            echo '```' >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+            head -20 "$GITHUB_WORKSPACE/output/$arch/extensions.txt" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+            echo '```' >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+            echo "" >> "$GITHUB_WORKSPACE/BUILD_INFO.md"
+          fi
+        done
+
+    - name: 上传独立二进制文件
+      uses: actions/upload-artifact@v4
+      with:
+        name: php-android-binaries-${{ matrix.arch }}
+        path: |
+          ${{ github.workspace }}/php-${{ matrix.arch }}.gz
+          ${{ github.workspace }}/php-android-${{ matrix.arch }}.tar.gz
+        retention-days: 90
+
+    - name: 发布到GitHub Releases
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ${{ github.workspace }}/php-*.gz
+          ${{ github.workspace }}/php-android-*.tar.gz
+          ${{ github.workspace }}/BUILD_INFO.md
+        body: |
+          # 优化版 PHP for Android
+          
+          为Android优化的静态PHP CLI二进制文件，包含核心扩展，文件更小。
+          
+          ## 特点
+          - ✅ 完全静态链接，零依赖
+          - ✅ 优化的大小 (~5-8MB)
+          - ✅ 支持主流架构：ARM64、ARMv7、x86_64
+          - ✅ 包含20+个核心扩展
+          - ✅ 现代加密支持 (OpenSSL 3.2)
+          - ✅ 针对移动设备优化
+          
+          ## 使用方法
+          ```bash
+          # 下载对应架构的文件
+          # arm64-v8a - 现代Android设备
+          # armeabi-v7a - 旧款ARM设备
+          # x86_64 - 模拟器/Intel设备
+          
+          # 方法1: 使用压缩包（推荐）
+          tar -xzf php-android-arm64-v8a.tar.gz
+          ./launch.sh -v
+          
+          # 方法2: 使用纯二进制
+          gunzip php-arm64-v8a.gz
+          chmod +x php-arm64-v8a
+          ./php-arm64-v8a script.php
+          ```
+          
+          ## 包含的扩展
+          - 核心: bcmath, calendar, ctype, dom, exif, filter, hash, json
+          - 数据库: pdo, pdo_sqlite, pdo_mysql, mysqli, sqlite3
+          - 网络: curl, ftp, sockets, openssl
+          - 文件: zip, phar, fileinfo
+          - 文本: mbstring, iconv, gettext
+          - 其他: gd, pcntl, posix, session, sodium, xml
+          
+          ## 配置建议
+          默认配置已针对移动设备优化，可通过修改php.ini调整。
